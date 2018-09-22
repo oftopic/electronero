@@ -272,7 +272,7 @@ namespace cryptonote
       if (version >= 6 && version != hshd.top_version)
       {
         if (version < hshd.top_version && version == m_core.get_ideal_hard_fork_version())
-          MCLOG_RED(el::Level::Warning, "global", context << " peer claims higher version that we think (" <<
+          MCLOG_RED(el::Level::Warning, "global", context << " peer claims higher version than we detect locally (" <<
               (unsigned)hshd.top_version << " for " << (hshd.current_height - 1) << " instead of " << (unsigned)version <<
               ") - we may be forked from the network and a software upgrade may be needed");
         return false;
@@ -282,9 +282,16 @@ namespace cryptonote
     context.m_remote_blockchain_height = hshd.current_height;
 
     uint64_t target = m_core.get_target_blockchain_height();
+    uint64_t target_controller = m_core.get_current_blockchain_height();
     if (target == 0)
+    {
       target = m_core.get_current_blockchain_height();
-
+    }
+    if (target != 0) {
+        return std::max(target_controller, target);
+    } else {
+        return 0;
+    }
     if(m_core.have_block(hshd.top_id))
     {
       context.m_state = cryptonote_connection_context::state_normal;
